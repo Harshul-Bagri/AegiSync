@@ -141,7 +141,7 @@ export default function RainHero() {
             }}
           >
             When storms, bad air, or platform outages stop Zomato and Swiggy partners from
-            earning, GigShield pays out automatically — no claim forms, no waiting, no haggling.
+            earning, AegiSync pays out automatically — no claim forms, no waiting, no haggling.
           </p>
 
           {/* CTAs */}

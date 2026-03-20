@@ -1,6 +1,6 @@
-# 🛡️ GigShield — AI-Powered Parametric Income Insurance for Food Delivery Partners
+# 🛡️ AegiSync — AI-Powered Parametric Income Insurance for Food Delivery Partners
 
-> *"When the rain stops your rides, GigShield covers your income."*
+> *"When the rain stops your rides, AegiSync covers your income."*
 
 **Guidewire DEVTrails 2026 | Team Submission | Phase 1**
 
@@ -33,10 +33,10 @@ When external disruptions hit — a cyclone in Chennai, a red-alert AQI day in D
 
 ## Our Solution
 
-**GigShield** is an AI-enabled parametric income insurance platform built exclusively for Zomato and Swiggy delivery partners.
+**AegiSync** is an AI-enabled parametric income insurance platform built exclusively for Zomato and Swiggy delivery partners.
 
 ### How it works in one sentence:
-> When a verified external disruption (heavy rain, severe AQI, curfew) crosses a predefined threshold in a worker's operating zone, GigShield automatically detects the trigger, validates the claim, and transfers lost income directly to their UPI wallet — **zero paperwork, zero waiting.**
+> When a verified external disruption (heavy rain, severe AQI, curfew) crosses a predefined threshold in a worker's operating zone, AegiSync automatically detects the trigger, validates the claim, and transfers lost income directly to their UPI wallet — **zero paperwork, zero waiting.**
 
 ### Key Differentiators:
 - **Zero-touch claims** — no worker ever needs to file a claim manually
@@ -56,16 +56,16 @@ When external disruptions hit — a cyclone in Chennai, a red-alert AQI day in D
 - **Pain point:** Loses 2–3 days of income during monsoon season (June–September) every year with zero recourse
 
 ### Scenario 1 — Heavy Rainfall Trigger
-> It's July. Bengaluru receives 85mm of rain in 6 hours. Swiggy pauses operations in Koramangala. Rajesh parks his bike. Without GigShield, he loses ₹700. With GigShield, by 11 PM the system has already detected the IMD rainfall alert, cross-validated with Swiggy's zone-pause API signal, approved the claim automatically, and transferred ₹560 (80% of daily average) to his UPI ID.
+> It's July. Bengaluru receives 85mm of rain in 6 hours. Swiggy pauses operations in Koramangala. Rajesh parks his bike. Without AegiSync, he loses ₹700. With AegiSync, by 11 PM the system has already detected the IMD rainfall alert, cross-validated with Swiggy's zone-pause API signal, approved the claim automatically, and transferred ₹560 (80% of daily average) to his UPI ID.
 
 ### Scenario 2 — Severe AQI Trigger
 > November. Delhi AQI hits 420 (Hazardous). GRAP Stage IV restrictions are imposed. Zomato advises partners to stay home. Meena, a Zomato partner in Dwarka, gets an automatic payout for 4 hours of lost income without opening the app once.
 
 ### Scenario 3 — Unplanned Curfew / Bandh
-> A sudden bandh is called overnight in Pune. Local social media confirms road closures by 7 AM. GigShield's NLP engine detects the bandh via Twitter/X keyword clusters and official government alerts. Delivery partner Suresh receives an alert: "Your zone is disruption-covered today. Income protection activated."
+> A sudden bandh is called overnight in Pune. Local social media confirms road closures by 7 AM. AegiSync's NLP engine detects the bandh via Twitter/X keyword clusters and official government alerts. Delivery partner Suresh receives an alert: "Your zone is disruption-covered today. Income protection activated."
 
 ### Scenario 4 — Platform Outage (App Crash)
-> Swiggy faces a backend outage for 3 hours during dinner peak. GigShield detects the platform API going silent across a region and cross-validates with Downdetector signals. Workers in active status at outage time receive a partial income protection payout.
+> Swiggy faces a backend outage for 3 hours during dinner peak. AegiSync detects the platform API going silent across a region and cross-validates with Downdetector signals. Workers in active status at outage time receive a partial income protection payout.
 
 ---
 
@@ -107,7 +107,7 @@ When external disruptions hit — a cyclone in Chennai, a red-alert AQI day in D
 **Step 2 — Policy Activation**
 - Worker selects from 3 coverage tiers (Basic / Standard / Premium)
 - Weekly payment deducted via UPI AutoPay or Zomato Pay integration
-- Policy card generated with unique GigShield ID
+- Policy card generated with unique AegiSync ID
 
 **Step 3 — Real-Time Monitoring**
 - Continuous polling of disruption data APIs by zone
@@ -230,7 +230,7 @@ The worker-facing UI is **mobile-first**, designed for one-thumb navigation and 
 ### 4. Predictive Risk Alert — Worker Notification
 - **Algorithm:** Time-series forecasting (Prophet / LSTM) on weather patterns
 - **Purpose:** 48-hour advance warning to workers: "High disruption risk this weekend — your coverage is active"
-- **Benefit:** Increases trust, reduces support queries, differentiates GigShield from competitors
+- **Benefit:** Increases trust, reduces support queries, differentiates AegiSync from competitors
 
 ### 5. Platform Outage Detection
 - **Method:** Synthetic monitoring — automated ping to Zomato/Swiggy order endpoints every 5 minutes
@@ -350,7 +350,7 @@ The worker-facing UI is **mobile-first**, designed for one-thumb navigation and 
 ## Adversarial Defense & Anti-Spoofing Strategy
 
 > **Market Crash Response — Added under 24-hour compliance mandate.**
-> A coordinated syndicate exploiting GPS-spoofing to drain parametric insurance liquidity pools is not a hypothetical. GigShield was designed with this threat model in mind from day one. Here is our layered defense.
+> A coordinated syndicate exploiting GPS-spoofing to drain parametric insurance liquidity pools is not a hypothetical. AegiSync was designed with this threat model in mind from day one. Here is our layered defense.
 
 ---
 
@@ -358,7 +358,7 @@ The worker-facing UI is **mobile-first**, designed for one-thumb navigation and 
 
 The core insight: **a spoofed GPS signal is a perfect signal. A real worker in a storm is not.**
 
-Genuine workers in a weather disruption produce *messy, inconsistent, degraded* device telemetry — because storms destroy signal quality. Spoofers sitting at home on WiFi produce suspiciously clean data. GigShield's ML pipeline is built to treat "too clean" as a red flag.
+Genuine workers in a weather disruption produce *messy, inconsistent, degraded* device telemetry — because storms destroy signal quality. Spoofers sitting at home on WiFi produce suspiciously clean data. AegiSync's ML pipeline is built to treat "too clean" as a red flag.
 
 We run a **Behavioural Authenticity Score (BAS)** per claim, computed from five signal layers:
 
@@ -368,7 +368,7 @@ We run a **Behavioural Authenticity Score (BAS)** per claim, computed from five 
 | **Accelerometer / Motion** | Micro-vibrations consistent with sitting on a stationary bike in rain (wind buffeting, seat movement) | Near-zero movement — consistent with lying on a couch |
 | **Network Switching Pattern** | Rapid 4G→2G→offline cycling as towers get congested in the storm | Stable WiFi or strong LTE throughout |
 | **Battery & Charging State** | Battery draining (bike/scooter running, no charger) | Often charging — home behaviour |
-| **App Interaction Pattern** | Worker opens GigShield, checks status, possibly tries to accept orders — desperate micro-interactions | No app interaction — claim fires passively |
+| **App Interaction Pattern** | Worker opens AegiSync, checks status, possibly tries to accept orders — desperate micro-interactions | No app interaction — claim fires passively |
 
 The BAS is a weighted ensemble score (0–100). BAS < 40 → automatic fraud flag. BAS 40–65 → secondary review queue. BAS > 65 → auto-approved.
 
@@ -378,7 +378,7 @@ The BAS is a weighted ensemble score (0–100). BAS < 40 → automatic fraud fla
 
 Individual GPS spoofing is hard to catch. **Coordinated ring behaviour is easy to catch** — because coordination leaves a statistical fingerprint that honest behaviour never produces.
 
-GigShield runs a **Syndicate Detection Engine** that analyzes claim batches at the zone level, not just individual claims:
+AegiSync runs a **Syndicate Detection Engine** that analyzes claim batches at the zone level, not just individual claims:
 
 **Signal 1 — Temporal Clustering (The Smoking Gun)**
 Honest workers are distributed across a disruption window. Fraudsters coordinate via Telegram and tend to file within a narrow burst window. We flag any zone where >15% of claims arrive within a 4-minute window — statistically impossible under natural conditions.
@@ -399,7 +399,7 @@ A worker who has filed 0 claims in 6 months and suddenly files 3 in one week dur
 
 ### 3. The UX Balance — Protecting Honest Workers from False Positives
 
-This is the hardest problem. A delivery partner already stressed by a storm should not face a Kafkaesque appeals process. Our principle: **the burden of proof is on GigShield's fraud engine, not on the worker.**
+This is the hardest problem. A delivery partner already stressed by a storm should not face a Kafkaesque appeals process. Our principle: **the burden of proof is on AegiSync's fraud engine, not on the worker.**
 
 **The Three-Tier Response System:**
 
@@ -475,7 +475,7 @@ Gross Profit                      : ~₹14.3 Cr
 ## Repository Structure
 
 ```
-gigshield/
+aegisync/
 ├── frontend/                  # Next.js 14 web app
 │   ├── app/
 │   │   ├── onboarding/        # Worker registration flow

@@ -1,5 +1,5 @@
 """
-Seed script — wipes and repopulates the gigshield database with realistic demo data.
+Seed script — wipes and repopulates the aegisync database with realistic demo data.
 Run: python seed.py
 """
 import uuid

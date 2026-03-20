@@ -108,7 +108,7 @@ export default function AdminPage() {
           <h1 className="font-display" style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
             Admin Dashboard
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>GigShield Operations · {new Date().toLocaleDateString('en-IN', { dateStyle: 'long' })}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>AegiSync Operations · {new Date().toLocaleDateString('en-IN', { dateStyle: 'long' })}</p>
         </div>
 
         {/* KPI Row */}

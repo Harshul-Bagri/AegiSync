@@ -87,7 +87,7 @@ const TESTIMONIALS = [
     city: 'Bengaluru',
     platform: 'Swiggy',
     initials: 'RK',
-    quote: 'Last monsoon I lost 4 working days to flooding. This year I got ₹2,600 directly in my UPI without even opening the app. GigShield is the real deal.',
+    quote: 'Last monsoon I lost 4 working days to flooding. This year I got ₹2,600 directly in my UPI without even opening the app. AegiSync is the real deal.',
     rating: 5,
   },
   {
@@ -113,7 +113,7 @@ const TESTIMONIALS = [
 const FAQ_ITEMS = [
   {
     q: 'What disruptions are covered?',
-    a: 'GigShield covers 5 types: Heavy rainfall (>60mm/3hr), Severe AQI (PM2.5 >250), Official flood alerts, Bandh/curfew events, and Platform outages lasting >2 hours during peak delivery time. All triggers are verified by external APIs — no manual claim needed.',
+    a: 'AegiSync covers 5 types: Heavy rainfall (>60mm/3hr), Severe AQI (PM2.5 >250), Official flood alerts, Bandh/curfew events, and Platform outages lasting >2 hours during peak delivery time. All triggers are verified by external APIs — no manual claim needed.',
   },
   {
     q: 'How fast will I get paid?',
@@ -121,7 +121,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Do I need to file a claim manually?',
-    a: 'No. GigShield monitors disruption signals 24/7. When a trigger threshold is crossed in your zone, claims are automatically created for all active policyholders in that area. You just get paid.',
+    a: 'No. AegiSync monitors disruption signals 24/7. When a trigger threshold is crossed in your zone, claims are automatically created for all active policyholders in that area. You just get paid.',
   },
   {
     q: 'What determines my weekly premium?',
@@ -133,7 +133,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What is NOT covered?',
-    a: 'GigShield covers income loss ONLY. We do not cover: health/medical expenses, vehicle damage or repair, personal accidents, injuries, theft, or any situation not caused by a verified external disruption event. This is not a health insurance or vehicle insurance product.',
+    a: 'AegiSync covers income loss ONLY. We do not cover: health/medical expenses, vehicle damage or repair, personal accidents, injuries, theft, or any situation not caused by a verified external disruption event. This is not a health insurance or vehicle insurance product.',
   },
 ]
 
@@ -156,7 +156,7 @@ export default function LandingPage() {
               Simple & Automatic
             </p>
             <h2 className="font-display font-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', color: 'var(--text-primary)' }}>
-              How GigShield Works
+              How AegiSync Works
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -303,7 +303,7 @@ export default function LandingPage() {
               Real Stories
             </p>
             <h2 className="font-display font-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', color: 'var(--text-primary)' }}>
-              Delivery Partners Love GigShield
+              Delivery Partners Love AegiSync
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

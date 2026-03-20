@@ -4,15 +4,15 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: gigshield
-      POSTGRES_USER: gigshield
-      POSTGRES_PASSWORD: gigshield
+      POSTGRES_DB: aegisync
+      POSTGRES_USER: aegisync
+      POSTGRES_PASSWORD: aegisync
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gigshield"]
+      test: ["CMD-SHELL", "pg_isready -U aegisync"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -32,7 +32,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://gigshield:gigshield@db:5432/gigshield
+      DATABASE_URL: postgresql://aegisync:aegisync@db:5432/aegisync
       REDIS_URL: redis://redis:6379
       DEV_MODE: "true"
     env_file:

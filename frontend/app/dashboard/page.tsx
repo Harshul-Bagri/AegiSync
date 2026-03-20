@@ -133,7 +133,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
-                      GigShield ACTIVE
+                      AegiSync ACTIVE
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                       Standard Plan · Week of {formatDate(DEMO_POLICY.start_date)} – 23 Mar

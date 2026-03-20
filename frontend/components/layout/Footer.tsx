@@ -16,7 +16,7 @@ export default function Footer() {
               When rain stops you,<br />we pay you.
             </p>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', marginTop: '1rem' }}>
-              © 2026 GigShield. All rights reserved.
+              © 2026 AegiSync. All rights reserved.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export default function Footer() {
           }}
         >
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
-            GigShield is not a registered insurer. Income protection offered under a parametric contract. IRDAI regulations apply.
+            AegiSync is not a registered insurer. Income protection offered under a parametric contract. IRDAI regulations apply.
           </p>
           <div className="flex gap-4">
             <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>Guidewire DEVTrails 2026</span>

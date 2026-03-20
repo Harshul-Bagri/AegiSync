@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://gigshield:gigshield@localhost:5432/gigshield"
+    database_url: str = "postgresql://aegisync:aegisync@localhost:5432/aegisync"
     redis_url: str = "redis://localhost:6379"
 
     jwt_secret: str = "dev-secret-change-in-production"

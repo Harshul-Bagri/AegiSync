@@ -4,9 +4,9 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: 'GigShield — Income Protection for Delivery Partners',
+  title: 'AegiSync — Income Protection for Delivery Partners',
   description:
-    'Parametric income insurance for Zomato and Swiggy delivery partners. When disruptions stop your work, GigShield pays you automatically.',
+    'Parametric income insurance for Zomato and Swiggy delivery partners. When disruptions stop your work, AegiSync pays you automatically.',
 }
 
 export default function RootLayout({

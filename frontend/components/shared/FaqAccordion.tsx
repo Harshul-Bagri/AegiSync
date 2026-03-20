@@ -6,7 +6,7 @@ import { ChevronDown } from 'lucide-react'
 const FAQS = [
   {
     q: 'What disruptions are covered?',
-    a: 'GigShield covers five types of verified disruptions: heavy rainfall (>60mm/hr), extreme AQI pollution (PM2.5 >250), NDMA-confirmed floods, city-wide bandh or curfew events (>80% confidence), and Zomato/Swiggy platform outages lasting more than 2 hours.',
+    a: 'AegiSync covers five types of verified disruptions: heavy rainfall (>60mm/hr), extreme AQI pollution (PM2.5 >250), NDMA-confirmed floods, city-wide bandh or curfew events (>80% confidence), and Zomato/Swiggy platform outages lasting more than 2 hours.',
   },
   {
     q: 'How does the automatic payout work?',
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: 'What is NOT covered?',
-    a: 'GigShield covers income loss only. We do NOT cover: medical expenses or hospitalisation, vehicle repair or maintenance, accidents or injuries, food spoilage or order cancellation fees, or any disruption lasting less than the minimum threshold. This is not a health or vehicle insurance product.',
+    a: 'AegiSync covers income loss only. We do NOT cover: medical expenses or hospitalisation, vehicle repair or maintenance, accidents or injuries, food spoilage or order cancellation fees, or any disruption lasting less than the minimum threshold. This is not a health or vehicle insurance product.',
   },
 ]
 

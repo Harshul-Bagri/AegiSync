@@ -165,7 +165,7 @@ export default function OnboardingPage() {
       coverage_per_day: TIER_CONFIG[form.tier as 'basic' | 'standard' | 'premium'].dailyCap,
       status: 'active',
     }
-    localStorage.setItem('gigshield_policy', JSON.stringify(policy))
+    localStorage.setItem('aegisync_policy', JSON.stringify(policy))
     setActivating(false)
     setSuccess(true)
     await new Promise((r) => setTimeout(r, 1200))
