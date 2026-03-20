@@ -509,13 +509,12 @@ gigshield/
 ---
 
 ## Team
-**GigShield | Guidewire DEVTrails 2026**
-Anushka Banerjee (RA2311003010599)
-Harshul Bagri (RA2311003010629)
-Shikhar Patel (RA2311003010634)
-Rajyalaxmi Mishra (RA2311003010642)
-Shashank Singh (RA2311003010597)
-Built with React/Next.js · FastAPI · Python ML 
+Built with React/Next.js · FastAPI · Python ML
+- Anushka Banerjee [@anushka369](https://github.com/anushka369/)
+- Harshul Bagri [@Harshul-Bagri](https://github.com/Harshul-Bagri/)
+- Rajyalaxmi Mishra [@Rajyalaxmi300](https://github.com/Rajyalaxmi300/)
+- Shashank Singh [@shashankexore](https://github.com/shashankexore/)
+- Shikhar Patel [@Shikharpatel](https://github.com/Shikharpatel/)
 
 ---
 
