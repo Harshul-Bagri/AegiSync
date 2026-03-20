@@ -510,7 +510,12 @@ gigshield/
 
 ## Team
 **GigShield | Guidewire DEVTrails 2026**
-Built with React/Next.js · FastAPI · Python ML · Claude API
+Anushka Banerjee (RA2311003010599)
+Harshul Bagri (RA2311003010629)
+Shikhar Patel (RA2311003010634)
+Rajyalaxmi Mishra (RA2311003010642)
+Shashank Singh (RA2311003010597)
+Built with React/Next.js · FastAPI · Python ML 
 
 ---
 
