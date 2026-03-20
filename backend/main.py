@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from routers import auth as auth_router
 from routers import policies as policies_router
+from routers import workers as workers_router
 
 
 @asynccontextmanager
@@ -41,6 +42,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.include_router(auth_router.router, prefix="/api/v1")
 app.include_router(policies_router.router, prefix="/api/v1")
+app.include_router(workers_router.router, prefix="/api/v1")
 
 
 # ── Health ───────────────────────────────────────────────────────────────────
