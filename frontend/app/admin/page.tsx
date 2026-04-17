@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { AlertTriangle, Users, DollarSign, ShieldAlert, TrendingDown, CheckCircle, XCircle, ChevronDown, Loader2 } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import {
   ADMIN_STATS,
   FRAUD_QUEUE,
@@ -33,7 +33,28 @@ interface ClaimOut {
   worker_name: string | null
   worker_city: string | null
   created_at: string
+  fraud_method: string | null
+  payout_gateway: string | null
 }
+
+interface ForecastPoint {
+  city: string
+  date: string
+  disruption_type: DisruptionType
+  probability: number
+  expected_claims: number
+}
+
+const FORECAST_COLORS: Record<DisruptionType, { stroke: string; fill: string }> = {
+  rainfall: { stroke: '#FF6B00', fill: 'rgba(255, 107, 0, 0.18)' },
+  aqi: { stroke: '#7C3AED', fill: 'rgba(124, 58, 237, 0.16)' },
+  flood: { stroke: '#2563EB', fill: 'rgba(37, 99, 235, 0.14)' },
+  bandh: { stroke: '#DC2626', fill: 'rgba(220, 38, 38, 0.12)' },
+  outage: { stroke: '#059669', fill: 'rgba(5, 150, 105, 0.12)' },
+}
+
+const FORECAST_HIGH_RISK_THRESHOLD = 0.6
+const AVERAGE_EXPECTED_PAYOUT = 433.33
 
 function mapClaimToFraudItem(c: ClaimOut): FraudQueueItem {
   return {
@@ -46,6 +67,8 @@ function mapClaimToFraudItem(c: ClaimOut): FraudQueueItem {
     bas_score: c.bas_score ?? 0,
     flags: c.fraud_flags ?? [],
     created_at: c.created_at,
+    fraud_method: c.fraud_method ?? null,
+    payout_gateway: c.payout_gateway ?? null,
   }
 }
 
@@ -134,6 +157,8 @@ export default function AdminPage() {
   const [fraudQueue, setFraudQueue] = useState<FraudQueueItem[]>(FRAUD_QUEUE)
   const [adminStats, setAdminStats] = useState<typeof ADMIN_STATS | null>(null)
   const [lossRatio, setLossRatio] = useState(ADMIN_STATS.loss_ratio)
+  const [forecast, setForecast] = useState<ForecastPoint[]>([])
+  const [forecastCity, setForecastCity] = useState('Bengaluru')
   const [toast, setToast] = useState<string | null>(null)
 
   // Simulator state
@@ -160,32 +185,35 @@ export default function AdminPage() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const [dashRes, disruptRes, fraudRes, lrRes] = await Promise.all([
+      const [dashRes, disruptRes, fraudRes, lrRes, forecastRes] = await Promise.all([
         api.get('/admin/dashboard'),
         api.get('/admin/disruptions/active'),
         api.get('/admin/fraud/queue'),
         api.get('/admin/analytics/loss-ratio'),
+        api.get('/admin/analytics/forecast'),
       ])
+      const totalP: number = lrRes.data.reduce((s: number, r: { premium_collected: number }) => s + r.premium_collected, 0)
+      const totalC: number = lrRes.data.reduce((s: number, r: { claims_paid: number }) => s + r.claims_paid, 0)
+      const nextLossRatio = totalP > 0 ? Math.round((totalC / totalP) * 100) : ADMIN_STATS.loss_ratio
+
       setAdminStats({
         active_workers: dashRes.data.total_workers,
         claims_today: dashRes.data.claims_today,
         amount_paid_today: dashRes.data.amount_paid_today,
         fraud_queue_count: dashRes.data.fraud_queue_count,
-        loss_ratio: lossRatio,
+        loss_ratio: nextLossRatio,
         premium_collected_week: 0,
         claims_paid_week: 0,
       })
       setDisruptions(disruptRes.data)
       setFraudQueue((fraudRes.data as ClaimOut[]).map(mapClaimToFraudItem))
+      setForecast(forecastRes.data as ForecastPoint[])
       setSecondsAgo(0)
-
-      const totalP: number = lrRes.data.reduce((s: number, r: { premium_collected: number }) => s + r.premium_collected, 0)
-      const totalC: number = lrRes.data.reduce((s: number, r: { claims_paid: number }) => s + r.claims_paid, 0)
-      setLossRatio(totalP > 0 ? Math.round((totalC / totalP) * 100) : ADMIN_STATS.loss_ratio)
+      setLossRatio(nextLossRatio)
     } catch (e) {
       console.error('[Admin] API failed, using mock data', e)
     }
-  }, [lossRatio])
+  }, [])
 
   useEffect(() => {
     if (!adminLoggedIn) return
@@ -239,6 +267,44 @@ export default function AdminPage() {
   const fraudScoreColor = (score: number) => score >= 70 ? '#DC2626' : score >= 50 ? '#EA580C' : '#D97706'
 
   const stats = adminStats ?? ADMIN_STATS
+  const selectedForecast = forecast
+    .filter((item) => item.city === forecastCity)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  const forecastChartData = selectedForecast.reduce<Array<Record<string, string | number>>>((rows, item) => {
+    const displayDate = new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    const existing = rows.find((row) => row.date === item.date)
+    if (existing) {
+      existing[item.disruption_type] = item.probability
+      return rows
+    }
+
+    rows.push({
+      date: item.date,
+      displayDate,
+      rainfall: 0,
+      aqi: 0,
+      flood: 0,
+      bandh: 0,
+      outage: 0,
+      [item.disruption_type]: item.probability,
+    })
+    return rows
+  }, [])
+
+  const forecastSummaryByDay = forecastChartData.map((row) => {
+    const date = String(row.date)
+    const entries = selectedForecast.filter((item) => item.date === date)
+    return {
+      date,
+      highestProbability: entries.reduce((max, item) => Math.max(max, item.probability), 0),
+      totalClaims: entries.reduce((sum, item) => sum + item.expected_claims, 0),
+    }
+  })
+
+  const highRiskDays = forecastSummaryByDay.filter((day) => day.highestProbability >= FORECAST_HIGH_RISK_THRESHOLD).length
+  const estimatedClaims = forecastSummaryByDay.reduce((sum, day) => sum + day.totalClaims, 0)
+  const estimatedPayouts = Math.round(estimatedClaims * AVERAGE_EXPECTED_PAYOUT)
 
   if (!adminLoggedIn) {
     return <AdminLoginForm onLogin={() => setAdminLoggedIn(true)} />
@@ -356,7 +422,7 @@ export default function AdminPage() {
 
         {/* Loss Ratio Chart (mock data — backend has no per-week breakdown) */}
         <div style={{ background: 'var(--surface-1)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', padding: '1.5rem', marginBottom: '1rem' }}>
-          <h2 style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '1.25rem' }}>Loss Ratio — Last 4 Weeks</h2>
+          <h2 style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '1.25rem' }}>Loss Ratio - Last 4 Weeks</h2>
           <div style={{ height: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={LOSS_RATIO_DATA} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -372,6 +438,70 @@ export default function AdminPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+
+        <div style={{ background: 'var(--surface-1)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', padding: '1.5rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Next 7 Days Forecast</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Predicted disruption probability by city and trigger type</p>
+            </div>
+
+            <div style={{ position: 'relative', minWidth: 180 }}>
+              <select
+                value={forecastCity}
+                onChange={(e) => setForecastCity(e.target.value)}
+                style={{ width: '100%', padding: '0.65rem 2rem 0.65rem 0.875rem', borderRadius: 'var(--radius-sm)', border: '1.5px solid var(--border)', fontSize: '0.875rem', fontFamily: 'inherit', appearance: 'none', background: 'var(--surface-1)', color: 'var(--text-primary)', cursor: 'pointer' }}
+              >
+                {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+              <ChevronDown size={14} style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+            </div>
+          </div>
+
+          {forecastChartData.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)', fontSize: '0.875rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              Forecast data will appear here once the analytics endpoint responds.
+            </div>
+          ) : (
+            <>
+              <div style={{ height: 280 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={forecastChartData} margin={{ top: 10, right: 10, left: -24, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="displayDate" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                      domain={[0, 1]}
+                      tickFormatter={(value: number) => `${Math.round(value * 100)}%`}
+                    />
+                    <Tooltip
+                      formatter={(value: number, name: string) => [`${Math.round(value * 100)}%`, name]}
+                      labelFormatter={(_: string, payload?: Array<{ payload?: { date?: string } }>) => payload?.[0]?.payload?.date ?? ''}
+                      contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: '0.8rem' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
+                    {DISRUPTION_TYPES.map((type) => (
+                      <Area
+                        key={type}
+                        type="monotone"
+                        dataKey={type}
+                        name={`${getDisruptionIcon(type)} ${type.charAt(0).toUpperCase() + type.slice(1)}`}
+                        stroke={FORECAST_COLORS[type].stroke}
+                        fill={FORECAST_COLORS[type].fill}
+                        strokeWidth={2}
+                        fillOpacity={1}
+                      />
+                    ))}
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div style={{ marginTop: '1rem', padding: '0.9rem 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-2)', border: '1px solid var(--border)', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                {forecastCity}: {highRiskDays} high-risk {highRiskDays === 1 ? 'day' : 'days'} forecast this week - estimated {estimatedClaims} claims, {formatINR(estimatedPayouts)} expected payouts.
+              </div>
+            </>
+          )}
         </div>
 
         {/* Fraud Queue */}
@@ -413,6 +543,20 @@ export default function AdminPage() {
                         <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: 100, background: 'var(--surface-3)', color: 'var(--text-secondary)' }}>
                           BAS {item.bas_score}
                         </span>
+                        {item.fraud_method && (
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 100, background: '#EDE9FE', color: '#6D28D9', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            {item.fraud_method.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                        {item.payout_gateway && (
+                          <span style={{
+                            fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 100,
+                            background: item.payout_gateway === 'upi' ? '#D1FAE5' : '#DBEAFE',
+                            color: item.payout_gateway === 'upi' ? '#065F46' : '#1E40AF',
+                          }}>
+                            {item.payout_gateway === 'upi' ? '🏦 UPI' : '💳 Razorpay'}
+                          </span>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>

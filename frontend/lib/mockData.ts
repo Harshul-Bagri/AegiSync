@@ -81,6 +81,8 @@ export interface FraudQueueItem {
   bas_score: number
   flags: string[]
   created_at: string
+  fraud_method: string | null
+  payout_gateway?: string | null
 }
 
 // ─── Tier Config (from CLAUDE.md Phase 2 Step 2.4) ────────────────────────────
@@ -103,30 +105,30 @@ export const ZONE_RISK_MAP: Record<string, Record<string, { pincode: string; ove
   Bengaluru: {
     Koramangala: { pincode: '560034', overall_risk: 1.28, flood_risk: 0.75, aqi_risk: 0.35 },
     Indiranagar: { pincode: '560038', overall_risk: 1.10, flood_risk: 0.50, aqi_risk: 0.35 },
-    Whitefield:  { pincode: '560066', overall_risk: 0.92, flood_risk: 0.30, aqi_risk: 0.40 },
+    Whitefield: { pincode: '560066', overall_risk: 0.92, flood_risk: 0.30, aqi_risk: 0.40 },
     'BTM Layout': { pincode: '560076', overall_risk: 1.30, flood_risk: 0.80, aqi_risk: 0.35 },
   },
   Mumbai: {
     'Andheri West': { pincode: '400058', overall_risk: 1.38, flood_risk: 0.85, aqi_risk: 0.55 },
-    Bandra:         { pincode: '400050', overall_risk: 1.25, flood_risk: 0.70, aqi_risk: 0.55 },
-    Powai:          { pincode: '400076', overall_risk: 1.12, flood_risk: 0.60, aqi_risk: 0.50 },
+    Bandra: { pincode: '400050', overall_risk: 1.25, flood_risk: 0.70, aqi_risk: 0.55 },
+    Powai: { pincode: '400076', overall_risk: 1.12, flood_risk: 0.60, aqi_risk: 0.50 },
   },
   Delhi: {
-    Dwarka:         { pincode: '110075', overall_risk: 1.25, flood_risk: 0.40, aqi_risk: 0.95 },
+    Dwarka: { pincode: '110075', overall_risk: 1.25, flood_risk: 0.40, aqi_risk: 0.95 },
     'Lajpat Nagar': { pincode: '110024', overall_risk: 1.22, flood_risk: 0.35, aqi_risk: 0.90 },
-    Rohini:         { pincode: '110085', overall_risk: 1.15, flood_risk: 0.30, aqi_risk: 0.92 },
+    Rohini: { pincode: '110085', overall_risk: 1.15, flood_risk: 0.30, aqi_risk: 0.92 },
   },
   Chennai: {
-    'T Nagar':  { pincode: '600017', overall_risk: 1.18, flood_risk: 0.65, aqi_risk: 0.40 },
-    Velachery:  { pincode: '600042', overall_risk: 1.32, flood_risk: 0.85, aqi_risk: 0.40 },
+    'T Nagar': { pincode: '600017', overall_risk: 1.18, flood_risk: 0.65, aqi_risk: 0.40 },
+    Velachery: { pincode: '600042', overall_risk: 1.32, flood_risk: 0.85, aqi_risk: 0.40 },
   },
   Pune: {
-    Kothrud:  { pincode: '411038', overall_risk: 0.98, flood_risk: 0.35, aqi_risk: 0.45 },
+    Kothrud: { pincode: '411038', overall_risk: 0.98, flood_risk: 0.35, aqi_risk: 0.45 },
     Hadapsar: { pincode: '411028', overall_risk: 1.08, flood_risk: 0.50, aqi_risk: 0.45 },
   },
   Hyderabad: {
     'Banjara Hills': { pincode: '500034', overall_risk: 0.97, flood_risk: 0.40, aqi_risk: 0.50 },
-    'LB Nagar':      { pincode: '500074', overall_risk: 1.16, flood_risk: 0.65, aqi_risk: 0.50 },
+    'LB Nagar': { pincode: '500074', overall_risk: 1.16, flood_risk: 0.65, aqi_risk: 0.50 },
   },
 }
 
@@ -344,11 +346,13 @@ export const FRAUD_QUEUE: FraudQueueItem[] = [
     fraud_score: 68,
     bas_score: 52,
     flags: [
-      'GPS signal quality 94% — inconsistent with severe rainfall',
-      'Network switched 0 times in 4 hours — indoor WiFi suspected',
-      'Motion score 0.03 — stationary entire window',
+      'gps_spoofing_detected',
+      'HDOP 0.82 — GPS precision implausibly high for reported storm conditions',
+      'Location jump 1240m in <30s — physically impossible movement',
+      'Mock location provider detected on device (com.lexa.fakegps)',
     ],
     created_at: '2026-03-20T14:35:00',
+    fraud_method: 'gps_spoofing',
   },
   {
     id: 'fq-002',
@@ -359,11 +363,12 @@ export const FRAUD_QUEUE: FraudQueueItem[] = [
     fraud_score: 79,
     bas_score: 34,
     flags: [
+      'No historical weather event found for Delhi at disruption time — claimed aqi disruption not corroborated by archived weather records',
       'Platform order rate normal during claimed AQI disruption',
       'velocity_anomaly — 3 claims in 7 days at maximum allowable limit',
-      'cohort_registration_burst — registered with 14 others in 48 hours',
     ],
     created_at: '2026-03-20T12:20:00',
+    fraud_method: 'weather_mismatch',
   },
   {
     id: 'fq-003',
@@ -375,10 +380,11 @@ export const FRAUD_QUEUE: FraudQueueItem[] = [
     bas_score: 41,
     flags: [
       'temporal_clustering — 19% of zone claims arrived within 3-minute window',
-      'Motion score 0.02 — no movement detected for 3 hours',
-      'Network stable on WiFi — inconsistent with claimed outdoor disruption',
+      'cohort_registration_burst — registered with 14 others in 48 hours',
+      'GPS signal quality 92% — inconsistent with severe outage conditions',
     ],
     created_at: '2026-03-20T10:05:00',
+    fraud_method: 'ring_signal',
   },
 ]
 

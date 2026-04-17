@@ -13,10 +13,12 @@ def notify_worker_claim_created(worker, claim) -> None:
 
 
 def notify_worker_claim_approved(worker, claim, payout) -> None:
+    gateway_label = payout.gateway.upper() if payout.gateway else "RAZORPAY"
+    ref = payout.upi_ref or payout.razorpay_ref or "—"
     print(
         f"[NOTIFY] Worker {worker.name} ({worker.phone}): "
-        f"Claim APPROVED — Rs{float(claim.amount):.2f} sent to {worker.upi_id} "
-        f"(ref={payout.razorpay_ref})"
+        f"Rs{float(claim.amount):.2f} sent via {gateway_label} to {worker.upi_id} "
+        f"(ref={ref})"
     )
 
 

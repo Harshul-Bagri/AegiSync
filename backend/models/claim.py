@@ -24,6 +24,7 @@ class Claim(Base):
     fraud_score: Mapped[float | None] = mapped_column(DECIMAL(5, 2), nullable=True)
     bas_score: Mapped[float | None] = mapped_column(DECIMAL(5, 2), nullable=True)
     fraud_flags: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    fraud_method: Mapped[str | None] = mapped_column(String(50), nullable=True)
     review_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     reviewed_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
     reviewed_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)

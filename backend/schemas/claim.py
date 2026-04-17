@@ -19,6 +19,7 @@ class ClaimOut(BaseModel):
     fraud_score: Optional[float] = None
     bas_score: Optional[float] = None
     fraud_flags: Optional[list] = None
+    fraud_method: Optional[str] = None
     review_reason: Optional[str] = None
     reviewed_by: Optional[str] = None
     reviewed_at: Optional[datetime] = None
@@ -29,6 +30,7 @@ class ClaimOut(BaseModel):
     worker_name: Optional[str] = None
     worker_city: Optional[str] = None
     worker_phone: Optional[str] = None
+    payout_gateway: Optional[str] = None
 
 
 class PayoutOut(BaseModel):
@@ -40,6 +42,8 @@ class PayoutOut(BaseModel):
     amount: float
     upi_id: str
     razorpay_ref: Optional[str] = None
+    upi_ref: Optional[str] = None
+    gateway: str = "razorpay"
     status: str
     initiated_at: datetime
     completed_at: Optional[datetime] = None

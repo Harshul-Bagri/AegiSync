@@ -7,6 +7,7 @@ from database import get_db
 from dependencies import get_current_worker
 from ml.risk_scorer import compute_zone_risk
 from models.claim import Claim
+from models.payout import Payout
 from models.policy import Policy
 from models.worker import Worker
 from schemas.policy import PolicyOut
@@ -120,6 +121,19 @@ def get_me(db: Session = Depends(get_db), worker: Worker = Depends(get_current_w
         .scalar()
     ) or 0.0
 
+    # Fetch the most recent payout gateway for approved claims
+    payout_map: dict = {}
+    for c in recent_claims:
+        if c.status == "approved":
+            p = (
+                db.query(Payout)
+                .filter(Payout.claim_id == c.id, Payout.status == "completed")
+                .order_by(Payout.initiated_at.desc())
+                .first()
+            )
+            if p:
+                payout_map[str(c.id)] = p.gateway or "razorpay"
+
     return WorkerMe(
         id=str(worker.id), name=worker.name, phone=worker.phone,
         city=worker.city, zone=worker.zone, platform=worker.platform,
@@ -134,6 +148,7 @@ def get_me(db: Session = Depends(get_db), worker: Worker = Depends(get_current_w
                 hours_lost=float(c.hours_lost) if c.hours_lost else None,
                 fraud_score=float(c.fraud_score) if c.fraud_score else None,
                 auto_approved=c.auto_approved, created_at=c.created_at,
+                gateway=payout_map.get(str(c.id)),
             )
             for c in recent_claims
         ],

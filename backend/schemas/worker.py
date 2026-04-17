@@ -35,6 +35,7 @@ class ClaimSummary(BaseModel):
     fraud_score: Optional[float] = None
     auto_approved: bool
     created_at: datetime
+    gateway: Optional[str] = None
 
 
 class WorkerResponse(BaseModel):

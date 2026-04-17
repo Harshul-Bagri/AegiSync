@@ -21,8 +21,9 @@ class FraudResult:
     bas_score: float           # 0-100; higher = more authentic worker behaviour
     fraud_score: float         # 0-100; higher = more suspicious
     ring_signals: list = field(default_factory=list)  # list of signal name strings
-    fraud_flags: list = field(default_factory=list)   # list of {signal, detail} dicts
+    fraud_flags: list = field(default_factory=list)   # list of detail strings
     recommendation: str = "approve"                   # approve | manual_review | reject
+    fraud_method: str | None = None                   # gps_spoofing | weather_mismatch | ring_signal
 
 
 # -- BAS helpers --------------------------------------------------------------
@@ -30,16 +31,22 @@ class FraudResult:
 def _mock_telemetry(simulate_fraud: bool) -> dict:
     """Generate realistic mock device telemetry for a worker during a disruption."""
     if simulate_fraud:
-        # Suspiciously clean: worker is at home pretending to be outside
+        # Suspiciously clean: worker is at home pretending to be outside.
+        # GPS is impossibly precise (no multipath from rain), stays still,
+        # and a known fake-GPS provider is often present.
         return {
             "gps_quality": random.uniform(0.85, 0.98),
             "network_stability": random.uniform(0.88, 0.99),
             "motion_score": random.uniform(0.02, 0.10),
             "battery_state": random.uniform(0.85, 0.99),
             "app_interactions": random.randint(0, 2),
+            # GPS spoof fields
+            "hdop": random.uniform(0.3, 1.2),               # too precise for storm conditions
+            "location_jump_m": random.uniform(650, 1800),   # impossible jump in 30s
+            "mock_provider_present": random.random() > 0.35,
         }
     # Normal: heavily degraded signals consistent with a real disruption.
-    # Rain/storms: GPS drops sharply, cell towers get overloaded (bad network),
+    # Rain/storms: GPS drops sharply (multipath), cell towers overloaded (bad network),
     # worker is actively moving (trying to complete deliveries), battery drains fast.
     return {
         "gps_quality": random.uniform(0.25, 0.60),
@@ -47,6 +54,10 @@ def _mock_telemetry(simulate_fraud: bool) -> dict:
         "motion_score": random.uniform(0.65, 0.90),
         "battery_state": random.uniform(0.20, 0.60),
         "app_interactions": random.randint(10, 20),
+        # GPS spoof fields — normal storm values
+        "hdop": random.uniform(3.5, 12.0),                  # degraded by rain/interference
+        "location_jump_m": random.uniform(40, 380),         # realistic delivery movement
+        "mock_provider_present": False,
     }
 
 
@@ -65,6 +76,126 @@ def _compute_bas(t: dict) -> float:
         + min(t["app_interactions"], 20) / 20 * 0.05
     )
     return round(authenticity * 100, 2)
+
+
+# -- Phase 3: GPS spoofing detection ------------------------------------------
+
+def gps_spoof_detector(telemetry: dict) -> tuple[list[str], int]:
+    """
+    Detect GPS spoofing from device telemetry.
+    Returns (fraud_flag_strings, score_boost).
+    Boost of 25 applies only when 2+ spoof signals are present simultaneously.
+    """
+    _KNOWN_FAKE_PROVIDERS = [
+        "com.lexa.fakegps",
+        "com.incorporateapps.fakegps",
+        "dev.faking.location",
+    ]
+    spoof_signals = []
+
+    hdop = telemetry.get("hdop", 99.0)
+    if hdop < 1.5:
+        spoof_signals.append(
+            f"HDOP {hdop:.2f} — GPS precision implausibly high for reported storm "
+            f"conditions (genuine outdoor signal degraded by rain typically > 3.0)"
+        )
+
+    jump = telemetry.get("location_jump_m", 0)
+    if jump > 500:
+        spoof_signals.append(
+            f"Location jump {jump:.0f}m in <30s — physically impossible movement, "
+            "consistent with mock GPS provider switching coordinates"
+        )
+
+    if telemetry.get("mock_provider_present", False):
+        provider = random.choice(_KNOWN_FAKE_PROVIDERS)
+        spoof_signals.append(
+            f"Mock location provider detected on device (known fake GPS app: {provider})"
+        )
+
+    if len(spoof_signals) >= 2:
+        return ["gps_spoofing_detected"] + spoof_signals, 25
+    return [], 0
+
+
+# -- Phase 3: Historical weather validation -----------------------------------
+
+_CITY_COORDS: dict[str, tuple[float, float]] = {
+    "Bengaluru": (12.9716, 77.5946),
+    "Mumbai":    (19.0760, 72.8777),
+    "Delhi":     (28.6139, 77.2090),
+    "Chennai":   (13.0827, 80.2707),
+    "Pune":      (18.5204, 73.8567),
+    "Hyderabad": (17.3850, 78.4867),
+}
+
+_RAINFALL_THRESHOLD_MM = 15.0  # moderate disruption threshold (matches trigger_monitor)
+
+
+def weather_claim_validator(disruption: Disruption, city: str) -> tuple[list[str], int]:
+    """
+    For rainfall/AQI claims: verify historical weather confirms the event existed.
+    Returns (fraud_flag_strings, score_boost).
+    """
+    if disruption.type not in ("rainfall", "aqi"):
+        return [], 0
+
+    confirmed = _check_historical_weather(disruption, city)
+    if confirmed:
+        return [], 0
+
+    return [
+        f"No historical weather event found for {city} at disruption time "
+        f"({disruption.started_at.strftime('%Y-%m-%d %H:%M UTC')}) — "
+        f"claimed {disruption.type} disruption not corroborated by archived weather records"
+    ], 30
+
+
+def _check_historical_weather(disruption: Disruption, city: str) -> bool:
+    """Returns True if historical weather data confirms the disruption existed."""
+    import httpx as _httpx
+
+    if not settings.openweathermap_api_key:
+        return _mock_weather_validation()
+
+    coords = _CITY_COORDS.get(city)
+    if not coords:
+        return True  # Unknown city — don't penalise
+
+    lat, lon = coords
+    timestamp = int(disruption.started_at.timestamp())
+
+    try:
+        resp = _httpx.get(
+            "https://api.openweathermap.org/data/2.5/onecall/timemachine",
+            params={
+                "lat": lat, "lon": lon, "dt": timestamp,
+                "appid": settings.openweathermap_api_key, "units": "metric",
+            },
+            timeout=6.0,
+        )
+        if resp.status_code != 200:
+            return True  # API error — don't penalise
+        data = resp.json()
+        hourly = data.get("hourly", [])
+        if disruption.type == "rainfall":
+            for h in hourly:
+                rain_mm = h.get("rain", {}).get("1h", 0.0)
+                if rain_mm >= _RAINFALL_THRESHOLD_MM:
+                    return True
+            return False
+        elif disruption.type == "aqi":
+            # OWM timemachine doesn't include AQI — defer to mock logic
+            return _mock_weather_validation()
+    except Exception:
+        return True  # Network error — don't penalise
+
+    return False
+
+
+def _mock_weather_validation() -> bool:
+    """SIMULATE_FRAUD=true → weather didn't match (flag it). Otherwise → confirmed."""
+    return not settings.simulate_fraud
 
 
 # -- Syndicate signal detectors -----------------------------------------------
@@ -166,8 +297,8 @@ def evaluate(
     db: Session,
 ) -> FraudResult:
     """
-    Run BAS scoring + 4 syndicate signal checks.
-    Returns a FraudResult with bas_score, fraud_score, ring_signals, and fraud_flags.
+    Run BAS scoring + 4 syndicate signal checks + Phase 3 GPS/weather detectors.
+    Returns a FraudResult with bas_score, fraud_score, fraud_flags, and fraud_method.
     """
     telemetry = _mock_telemetry(simulate_fraud=settings.simulate_fraud)
     bas_score = _compute_bas(telemetry)
@@ -200,6 +331,14 @@ def evaluate(
             f"Network switched 0 times in 4 hours -- suggests indoor WiFi connection."
         )
         fraud_flags.append(flag_detail)
+
+    # -- Phase 3: GPS spoofing detection --
+    gps_flags, gps_boost = gps_spoof_detector(telemetry)
+    fraud_flags.extend(gps_flags)
+
+    # -- Phase 3: Historical weather validation --
+    wx_flags, wx_boost = weather_claim_validator(disruption, worker.city)
+    fraud_flags.extend(wx_flags)
 
     # -- Composite fraud score --
     from ml.fraud_detector import score_features
@@ -251,7 +390,7 @@ def evaluate(
     # simulate_fraud adds a large boost so fraud claims reliably land in the queue
     if settings.simulate_fraud:
         signal_boost += 35.0
-    fraud_score = round(min(100.0, model_score + signal_boost), 2)
+    fraud_score = round(min(100.0, model_score + signal_boost + gps_boost + wx_boost), 2)
 
     recommendation = (
         "approve" if fraud_score < 35
@@ -259,10 +398,21 @@ def evaluate(
         else "reject"
     )
 
+    # Determine primary detection method for the fraud_method badge
+    if "gps_spoofing_detected" in fraud_flags:
+        fraud_method = "gps_spoofing"
+    elif wx_boost > 0:
+        fraud_method = "weather_mismatch"
+    elif ring_signals:
+        fraud_method = "ring_signal"
+    else:
+        fraud_method = None
+
     return FraudResult(
         bas_score=bas_score,
         fraud_score=fraud_score,
         ring_signals=ring_signals,
         fraud_flags=fraud_flags,
         recommendation=recommendation,
+        fraud_method=fraud_method,
     )

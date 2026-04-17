@@ -89,6 +89,7 @@ def create_automatic_claim(
         fraud_score=result.fraud_score,
         bas_score=result.bas_score,
         fraud_flags=result.fraud_flags if result.fraud_flags else None,
+        fraud_method=result.fraud_method,
         review_reason=review_reason,
         auto_approved=auto_approved,
     )

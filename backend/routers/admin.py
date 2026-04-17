@@ -58,12 +58,21 @@ def _sim_values(dtype: str, severity: str) -> tuple:
     return 1.0, 1.0   # flood, bandh
 
 
-def _claim_out(claim: Claim, worker: Optional[Worker] = None) -> ClaimOut:
+def _claim_out(claim: Claim, worker: Optional[Worker] = None, db: Optional[Session] = None) -> ClaimOut:
     c = ClaimOut.model_validate(claim)
     if worker:
         c.worker_name = worker.name
         c.worker_city = worker.city
         c.worker_phone = worker.phone
+    if db is not None:
+        payout = (
+            db.query(Payout)
+            .filter(Payout.claim_id == claim.id, Payout.status == "completed")
+            .order_by(Payout.initiated_at.desc())
+            .first()
+        )
+        if payout:
+            c.payout_gateway = payout.gateway or "razorpay"
     return c
 
 
@@ -131,7 +140,7 @@ def list_claims(
     total = q.count()
     rows = q.offset((page - 1) * _PAGE_SIZE).limit(_PAGE_SIZE).all()
 
-    items = [_claim_out(claim, worker) for claim, worker in rows]
+    items = [_claim_out(claim, worker, db) for claim, worker in rows]
     return {"total": total, "page": page, "page_size": _PAGE_SIZE, "items": items}
 
 
@@ -251,6 +260,9 @@ def simulate_disruption(
     db.commit()
     db.refresh(disruption)
 
+    from services.forecasting import invalidate_cache
+    invalidate_cache()
+
     from services.claim_processor import auto_create_claims_for_disruption
     auto_create_claims_for_disruption(disruption, db)
 
@@ -282,7 +294,7 @@ def get_fraud_queue(
         .order_by(Claim.fraud_score.desc())
         .all()
     )
-    return [_claim_out(claim, worker) for claim, worker in rows]
+    return [_claim_out(claim, worker, db) for claim, worker in rows]
 
 
 # ── Analytics ─────────────────────────────────────────────────────────────────
@@ -362,3 +374,17 @@ def get_disruption_heatmap(
 
     result.sort(key=lambda x: x["severity_score"], reverse=True)
     return result
+
+
+@router.get("/analytics/forecast")
+def get_forecast(
+    admin: str = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Return 7-day predicted disruption probability per city and type.
+    Trains Prophet models on historical disruptions (or synthetic data if sparse).
+    Results are cached for 1 hour.
+    """
+    from services.forecasting import get_forecast as _get_forecast
+    return _get_forecast(db)

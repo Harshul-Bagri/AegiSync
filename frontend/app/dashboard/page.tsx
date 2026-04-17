@@ -74,20 +74,21 @@ export default function DashboardPage() {
 
   const claims: Claim[] = workerData?.recent_claims
     ? workerData.recent_claims.map((c) => ({
-        id: c.id,
-        disruption_type: c.claim_type as Claim['disruption_type'],
-        city: workerData.city,
-        zone: workerData.zone,
-        status: c.status as Claim['status'],
-        amount: c.amount,
-        hours_lost: c.hours_lost ?? 0,
-        created_at: c.created_at,
-        auto_approved: c.auto_approved,
-        bas_score: 0,
-        fraud_score: c.fraud_score ?? 0,
-        processing_time: c.auto_approved ? '4m' : '—',
-        fraud_flags: [],
-      }))
+      id: c.id,
+      disruption_type: c.claim_type as Claim['disruption_type'],
+      city: workerData.city,
+      zone: workerData.zone,
+      status: c.status as Claim['status'],
+      amount: c.amount,
+      hours_lost: c.hours_lost ?? 0,
+      created_at: c.created_at,
+      auto_approved: c.auto_approved,
+      bas_score: 0,
+      fraud_score: c.fraud_score ?? 0,
+      processing_time: c.auto_approved ? '4m' : '—',
+      fraud_flags: [],
+      gateway: (c as { gateway?: string }).gateway ?? null,
+    }))
     : DEMO_CLAIMS
 
   const totalProtected = workerData
@@ -337,7 +338,7 @@ export default function DashboardPage() {
                   <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                     {formatINR(claim.amount)}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span style={{
                       fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 100,
                       background: getStatusBg(claim.status as Parameters<typeof getStatusBg>[0]),
@@ -346,6 +347,16 @@ export default function DashboardPage() {
                     }}>
                       {claim.status.replace('_', ' ')}
                     </span>
+                    {claim.status === 'approved' && (claim as { gateway?: string | null }).gateway && (
+                      <span style={{
+                        fontSize: '0.68rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: 100,
+                        background: (claim as { gateway?: string | null }).gateway === 'upi' ? '#D1FAE5' : '#DBEAFE',
+                        color: (claim as { gateway?: string | null }).gateway === 'upi' ? '#065F46' : '#1E40AF',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {(claim as { gateway?: string | null }).gateway === 'upi' ? '🏦 via UPI' : '💳 via Razorpay'}
+                      </span>
+                    )}
                     {claim.processing_time !== '—' && (
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                         <Clock size={10} style={{ display: 'inline', marginRight: 2 }} />{claim.processing_time}
